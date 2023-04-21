@@ -330,6 +330,9 @@ export default defineComponent({
     };
   },
   methods: {
+    recargarTablaDirectiva() {
+      this.$emit('getPostsDirectiva');
+    },
     cancelarSiNO() {
       this.$q.notify({
         message: '¿Quieres abandonar el formulario? tus datos no se guardaran',
@@ -461,6 +464,8 @@ export default defineComponent({
           message: 'Has asignado un nuevo miembro a la directiva ',
           icon: 'warning',
         });
+        this.recargarTablaDirectiva();
+        this.getPosts();
       } catch (error) {
         console.log(error.message);
         this.$q.notify({

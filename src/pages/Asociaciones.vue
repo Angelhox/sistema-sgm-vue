@@ -138,14 +138,17 @@ export default defineComponent({
     },
     async getPosts() {
       await this.$axios
-        .get('/asociaciones/all', {
-          headers: {
-            // Configura los encabezados necesarios para CORS
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
-            'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-          },
-        })
+        .get(
+          '/asociaciones/all'
+          // , {
+          //   headers: {
+          //     // Configura los encabezados necesarios para CORS
+          //     'Access-Control-Allow-Origin': '*',
+          //     'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
+          //     'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+          //   },
+          // }
+        )
         // .then((res) => {
         //   console.log(res.data);
         //   this.posts = res.data;
@@ -238,10 +241,11 @@ export default defineComponent({
     #009933,
     #336600
   ); */
-  background: #ffe2b7;
+  /* background: #ffe2b7;
   box-shadow: none;
   color: #000000;
-  box-shadow: #000000;
+  box-shadow: #000000; */
+  background: #00aaed;
 }
 h2 {
   text-transform: uppercase;

@@ -158,7 +158,7 @@
               <q-btn @click="exportarAExcel">Exportar a Excel</q-btn>
             </div>
 
-            <template v-slot:top-left>
+            <!-- <template v-slot:top-left>
               <q-btn
                 color="primary"
                 icon-right="archive"
@@ -166,12 +166,16 @@
                 no-caps
                 @click="exportarsAExcel"
               />
-            </template>
+            </template> -->
           </q-table>
           <div class="q-pa-md q-gutter-md">
             <q-btn color="teal" @click="showAdministradores('nuevoUsuario')">
               <q-icon left size="3em" name="person_add" />
               <div>Agregar usuario</div>
+            </q-btn>
+            <q-btn color="teal" @click="exportarsAExcel(this.posts)">
+              <q-icon left size="3em" name="person_add" />
+              <div>Exportar Excel</div>
             </q-btn>
           </div>
         </q-card-section>
@@ -238,11 +242,27 @@
                 </template>
               </q-input>
             </template>
+            <!-- <template v-slot:top-left>
+              <q-btn
+                color="primary"
+                icon-right="archive"
+                label="Export to csv"
+                no-caps
+                @click="exportarsAExcel"
+              />
+            </template> -->
           </q-table>
           <div class="q-pa-md q-gutter-md">
             <q-btn color="teal" @click="nuevoAdministradorAsociacion">
               <q-icon left size="3em" name="person_add" />
               <div>Agregar administrador</div>
+            </q-btn>
+            <q-btn
+              color="teal"
+              @click="exportarsAExcel(this.postsAdministradores)"
+            >
+              <q-icon left size="3em" name="person_add" />
+              <div>Exportar Excel</div>
             </q-btn>
           </div>
         </q-card-section>
@@ -251,7 +271,6 @@
   </q-page>
   <q-page v-show="showDirectivaTable">
     <div class="q-pa-md">
-      nidfbwbfinstablas
       <q-card>
         <q-card-section>
           <q-table
@@ -307,11 +326,99 @@
                 </template>
               </q-input>
             </template>
+            <!-- <template v-slot:top-center>
+              <q-btn
+                color="primary"
+                icon-right="archive"
+                label="Export to csv"
+                no-caps
+                @click="exportarsAExcel"
+              />
+            </template> -->
+            <template v-slot:top-left>
+              <q-btn-dropdown stretch flat label="Directiva">
+                <q-list>
+                  <q-item-label header>Periodos</q-item-label>
+                  <q-item
+                    clickable
+                    v-close-popup
+                    tabindex="0"
+                    @click="showDirectivaPeriodo('2020-2021')"
+                  >
+                    <q-item-section avatar>
+                      <q-avatar
+                        icon="people_outline"
+                        color="secondary"
+                        text-color="white"
+                      />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>2020-2021</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                  <q-item
+                    clickable
+                    v-close-popup
+                    tabindex="0"
+                    @click="showDirectivaPeriodo('2021-2022')"
+                  >
+                    <q-item-section avatar>
+                      <q-avatar
+                        icon="people_outline"
+                        color="secondary"
+                        text-color="white"
+                      />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>2021-2022</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                  <q-item
+                    clickable
+                    v-close-popup
+                    tabindex="0"
+                    @click="showDirectivaPeriodo('2022-2023')"
+                  >
+                    <q-item-section avatar>
+                      <q-avatar
+                        icon="people_outline"
+                        color="secondary"
+                        text-color="white"
+                      />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>2022-2023</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                  <q-item
+                    clickable
+                    v-close-popup
+                    tabindex="0"
+                    @click="showDirectivaPeriodo('2023-2024')"
+                  >
+                    <q-item-section avatar>
+                      <q-avatar
+                        icon="people_outline"
+                        color="secondary"
+                        text-color="white"
+                      />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>2023-2024</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-btn-dropdown>
+            </template>
           </q-table>
           <div class="q-pa-md q-gutter-md">
             <q-btn color="teal" @click="nuevoDirectivaAsociacion">
               <q-icon left size="3em" name="person_add" />
               <div>Agregar Directiva</div>
+            </q-btn>
+            <q-btn color="teal" @click="exportarsAExcel(this.postsDirectiva)">
+              <q-icon left size="3em" name="person_add" />
+              <div>Exportar Excel</div>
             </q-btn>
           </div>
         </q-card-section>
@@ -324,7 +431,8 @@
   </q-page>
   <q-page v-show="showFormNuevoUsuario">
     enviando Idasociacion{{ idasociacion }}
-    <form-nuevo-usuario :idasociacion="idasociacion"> </form-nuevo-usuario>
+    <form-nuevo-usuario @getPosts="getPosts" :idasociacion="idasociacion">
+    </form-nuevo-usuario>
   </q-page>
   <q-page v-show="showFormEditarUsuario">
     este es el id de usuario{{ this.idusuario }}
@@ -337,6 +445,7 @@
   <q-page v-show="showFormNuevoAdministrador">
     <form-nuevo-administrador
       :idasociacion="idasociacion"
+      @getPostsAdministradores="getPostsAdministradores"
     ></form-nuevo-administrador>
   </q-page>
   <q-page v-show="showFormEditarAdministrador">
@@ -358,6 +467,7 @@
   </q-page>
   <q-page v-show="showFormNuevoDirectiva">
     <form-nuevo-directiva
+      @getPostsDirectiva="getPostsDirectiva"
       ref="formenuevodirectiva"
       :idasociacion="idasociacion"
       :idusuario="idusuario"
@@ -554,21 +664,6 @@ export default defineComponent({
       showFormEditarAdministrador: false,
       showFormEditarDirectiva: false,
       showFormNuevoDirectiva: false,
-      postses: {
-        id: 1,
-        nombre: '23 de Julio S.A',
-        ruc: '    1724674823001',
-        lugarAutorizado: 'Mercado Diarios',
-        direccionLugarAutorizado: 'Cayambe centro',
-        cede: 'Si',
-        direccionCede: 'Juan Montalvo',
-        telefono: '0998181524',
-        correo: '23dejulio@gmail.com',
-        legalizada: 'Si',
-        documentoLegalizacion: '100200300400',
-        fechaCreacion: '2022-12-11',
-        tipoContribuyente: 'Natural',
-      },
     };
   },
   setup() {
@@ -656,12 +751,15 @@ export default defineComponent({
     this.showInicio(this.show);
   },
   methods: {
-    exportarsAExcel() {
+    metodoPadre() {
+      console.log('El método del componente padre se ha ejecutado');
+    },
+    exportarsAExcel(posts) {
       // Crear un nuevo libro de Excel
       const libro = XLSX.utils.book_new();
 
       // Crear una hoja de trabajo en el libro
-      const hoja = XLSX.utils.json_to_sheet(this.posts);
+      const hoja = XLSX.utils.json_to_sheet(posts);
 
       // Añadir la hoja de trabajo al libro
       XLSX.utils.book_append_sheet(libro, hoja, 'Tabla');
@@ -671,7 +769,6 @@ export default defineComponent({
     },
     exportarAExcel() {
       // Obtén los datos de tu tabla Quasar
-
       // Obtén los datos de la tabla Quasar en un formato que puedas procesar
       const datosTabla = this.$refs.tablaQuasar.body.map((fila) => {
         return {
@@ -897,6 +994,7 @@ export default defineComponent({
     },
 
     getPosts() {
+      console.log('ejecutando recarga tabla socios');
       let url =
         'http://localhost:3000/usuarios/usuariosAsociacion/' + this.idAsoc;
       fetch(url)
@@ -909,6 +1007,7 @@ export default defineComponent({
       };
     },
     getPostsAdministradores() {
+      console.log('ejecutanso recarga tabla administradores');
       let url =
         'http://localhost:3000/administradores/administradoresAsociacion/' +
         this.idAsoc;
@@ -922,9 +1021,26 @@ export default defineComponent({
       };
     },
     getPostsDirectiva() {
+      console.log('ejecutando recarga tabla directiva');
       let url =
         'http://localhost:3000/usuarios/usuariosDirectivaAsociacion/' +
         this.idAsoc;
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => mostrarData(data))
+        .catch((error) => console.log(error));
+      const mostrarData = (data) => {
+        console.log(data);
+        this.postsDirectiva = data;
+      };
+    },
+    showDirectivaPeriodo(periodo) {
+      console.log('periodo obtenido', periodo);
+      let url =
+        'http://localhost:3000/usuarios/usuariosDirectivaAsociacionPorPeriodo/' +
+        this.idAsoc +
+        '/' +
+        periodo;
       fetch(url)
         .then((response) => response.json())
         .then((data) => mostrarData(data))
@@ -1097,7 +1213,7 @@ export default defineComponent({
 </script>
 <style scoped>
 .toolbar {
-  background-image: linear-gradient(
+  /* background-image: linear-gradient(
     to right,
     #ffcc33,
     #ff6633,
@@ -1106,7 +1222,8 @@ export default defineComponent({
     #990099,
     #330066,
     #009933,
-    #336600
-  );
+    #336600 */
+  /* ); */
+  background: #00aaed;
 }
 </style>

@@ -2,7 +2,7 @@
 <template>
   <q-page padding>
     <div class="q-pa-sm row justify-center content-center">
-      <h3 class="text-h3" style="text-align: center">Actualizar asociación</h3>
+      <h3 class="text-h3" style="text-align: center">Actualizar Socio</h3>
       <div class="col-12 col-12">
         <q-toolbar class="bg-orange shadow-2 rounded-borders">
           <q-btn flat round dense icon="info" class="q-mr-sm" />
@@ -96,7 +96,7 @@
           label="Numero de teléfono"
           :rules="[
             (val) =>
-              (val && val.length > 0 && val.length < 10) ||
+              (val && val.length > 0 && val.length < 11) ||
               'Ingresa un numero de télefono válido',
           ]"
         />
@@ -295,6 +295,33 @@
         </q-input>
       </div>
     </div>
+
+    <div class="q-pa-sm col-12 col-md-6">
+      <q-input
+        label="Fecha de constancia en la asociación"
+        filled
+        v-model="fechaAntiguedad"
+        mask="date"
+        :rules="['date']"
+      >
+        <template v-slot:append>
+          <q-icon name="event" class="cursor-pointer">
+            <q-popup-proxy
+              cover
+              transition-show="scale"
+              transition-hide="scale"
+            >
+              <q-date v-model="fechaAntiguedad">
+                <div class="row items-center justify-end">
+                  <q-btn v-close-popup label="Close" color="primary" flat />
+                </div>
+              </q-date>
+            </q-popup-proxy>
+          </q-icon>
+        </template>
+      </q-input>
+    </div>
+
     <div class="q-pa-sm col-12 col-12">
       <q-toolbar class="bg-orange shadow-2 rounded-borders">
         <q-btn flat round dense icon="info" class="q-mr-sm" />
@@ -655,6 +682,34 @@
           ]"
         />
       </div>
+      <div class="q-pa-sm col-12 col-md-6">
+        <q-input
+          filled
+          :disable="habilitarCampos"
+          v-model="numeroLocal"
+          label="Numero de local"
+          hint="ejemplo: #142"
+          :rules="[
+            (val) =>
+              (val && val.length > 0) || 'Ingrese numero de local del socio',
+          ]"
+        />
+      </div>
+
+      <div class="q-pa-sm col-12 col-md-6">
+        <q-input
+          filled
+          type="number"
+          :disable="habilitarCampos"
+          v-model="areaLocal"
+          label="Area del local en metros cuadrados"
+          hint="ejemplo:500"
+          :rules="[
+            (val) =>
+              (val && val.length > 0) || 'Ingrese el area del local del socio',
+          ]"
+        />
+      </div>
       <div class="q-pa-sm col-6 col-md-6">
         <q-input
           filled
@@ -731,14 +786,14 @@
     <div class="q-pa-md q-gutter-md">
       <q-btn color="teal" @click="mostrarDatos(this.dataUsers)">
         <q-icon left size="3em" name="save" />
-        <div>sdfghadfhasdfhrad</div>
       </q-btn>
     </div>
   </q-page>
 </template>
 <script>
-import TablaAsociaciones from 'src/components/Tabla.Asociaciones.vue';
 import { defineComponent, ref } from 'vue';
+import moment from 'moment';
+import 'moment/locale/es';
 const stringOptions = ['Fijo', 'No fijo'];
 const stringOptions1 = ['Si', 'No'];
 const stringOptions2 = ['Activo', 'Innactivo'];
@@ -788,6 +843,7 @@ export default defineComponent({
       //data datos especificos del usuario
       fechaNacimiento: '',
       fechaRegistro: '',
+      fechaAntiguedad: '',
       idCarnet: '',
       //datos discapacidad sino del usuario
       tipoDiscapacidad: '',
@@ -805,6 +861,8 @@ export default defineComponent({
       dataUsers: [],
       xx: '',
       x: '',
+      areaLocal: '',
+      numeroLocal: '',
     };
   },
 
@@ -1041,6 +1099,10 @@ export default defineComponent({
         camposIncorrectos.push('horario abierto');
       } else if (this.horarioCerrado == null || this.horarioCerrado == '') {
         camposIncorrectos.push('horario cerrado');
+      } else if (this.areaLocal == null || this.areaLocal == '') {
+        camposIncorrectos.push('area del local');
+      } else if (this.numeroLocal == null || this.numeroLocal == '') {
+        camposIncorrectos.push('numero del local');
       }
       if (camposIncorrectos.length > 0) {
         for (let i = 0; i < camposIncorrectos.length; i++) {}
@@ -1049,7 +1111,6 @@ export default defineComponent({
             'Completa los campos ' + camposIncorrectos + ' correctamente',
           icon: 'warning',
         });
-        obtenerFechaDesdeString(this.fechaNacimiento);
         console.log('No Guardando...', camposIncorrectos);
       } else {
         // this.guardarAsociacion();
@@ -1098,7 +1159,7 @@ export default defineComponent({
     async guardarUsuario() {
       try {
         const response = await this.$axios.post(
-          'http://localhost:3000/usuarios/usersData/' + this.idasociacion,
+          'http://localhost:3000/usuarios/actualizarUsuario/' + this.idusuario,
           {
             //Datos basicos del usuario
             nombre: this.nombre,
@@ -1126,11 +1187,14 @@ export default defineComponent({
             lugarAutorizado: this.lugarAutorizado,
             diasHorario: this.diasHorario,
             direccionLugarAutorizado: this.direccionLugarAutorizado,
+            areaLocal: this.areaLocal,
+            numeroLocal: this.numeroLocal,
             //data datos especificos del usuario
             carnetizado: this.carnetizado,
             categoria: this.categoria,
             registrado: this.registrado,
             estado: this.estado,
+            fechaAntiguedad: this.obtenerFechaDesdeString(this.fechaAntiguedad),
             //datos discapacidad sino del usuario
             discapacidad: this.discapacidad,
             idCarnetDiscapacidad: this.idCarnetDiscapacidad,
@@ -1139,12 +1203,8 @@ export default defineComponent({
             gradoDiscapacidad: this.gradoDiscapacidad,
             //Datos especificos del usuario
             estadoCivil: this.estadoCivil,
-            fechaNacimiento: this.fechaNacimiento,
-            fechaRegistro: this.fechaRegistro,
-
-            //datos directiva del usuario
-            esDirectiva: this.esDirectiva,
-            fechaInicio: this.fechaInicio,
+            fechaNacimiento: this.obtenerFechaDesdeString(this.fechaNacimiento),
+            fechaRegistro: this.obtenerFechaDesdeString(this.fechaRegistro),
           }
         );
         //---Notificar que se guardaron los datos
@@ -1162,7 +1222,9 @@ export default defineComponent({
     },
     async listarDatos() {
       console.log('ejecutandose', this.idUsuario);
-      fetch('http://localhost:3000/usuarios/selectUser/' + this.idusuario)
+      fetch(
+        'http://localhost:3000/usuarios/datosUsuarioPorId/' + this.idusuario
+      )
         .then((response) => response.json())
         .then((data) => mostrarData(data))
         .then((dataUsers) => shows(dataUsers))
@@ -1188,7 +1250,7 @@ export default defineComponent({
         this.propiedadVivienda = datos.propiedadVivienda;
         this.aguaPotable = datos.aguaPotable;
         this.luzElectrica = datos.luzElectrica;
-        this.servicioTelefono = datos.telefono;
+        this.servicioTelefono = datos.servicioTelefono;
         // modeServicioElectricidad: ref(null);
         this.servicioInternet = datos.servicioInternet;
         this.numeroDormitorios = datos.numeroDormitorios;
@@ -1197,13 +1259,17 @@ export default defineComponent({
         this.horarioAbierto = datos.horarioAbierto;
         this.horarioCerrado = datos.horarioCerrado;
         this.lugarAutorizado = datos.lugarAutorizado;
+        this.areaLocal = datos.areaLocal;
+        this.numeroLocal = datos.numeroLocal;
         this.diasHorario = datos.diasHorario;
         this.direccionLugarAutorizado = datos.direccionLugarAutorizado;
+
         //data datos especificos del usuario
         this.carnetizado = datos.carnetizado;
         this.categoria = datos.categoria;
         this.registrado = datos.registrado;
         this.estado = datos.estado;
+        this.fechaAntiguedad = datos.fechaAntiguedad;
         //datos discapacidad sino del usuario
         this.discapacidad = datos.discapacidad;
         this.idCarnetDiscapacidad = datos.idCarnetDiscapacidad;

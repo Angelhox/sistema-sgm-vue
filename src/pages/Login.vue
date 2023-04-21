@@ -105,7 +105,7 @@ export default defineComponent({
         password: this.password,
       };
       await this.$axios
-        .post('http://localhost:3000/auth', payload)
+        .post('/auth', payload)
         .then((response) => {
           this.$axios.defaults.headers.common['Authorization'] =
             'Bearer' + response.data.acces_token;
@@ -147,10 +147,7 @@ export default defineComponent({
     async obtenerIdAsociacion(userId) {
       let asociacionIdDefinido;
       await this.$axios
-        .get(
-          'http://localhost:3000/administradores/asociacionDelAdministrador/' +
-            userId
-        )
+        .get('/administradores/asociacionDelAdministrador/' + userId)
         .then((res) => {
           console.log('hey', res.data[0].asociacionId);
           console.log(res.data.asociacionId);
@@ -196,16 +193,15 @@ export default defineComponent({
 }
 
 .q-form {
-  background-image: linear-gradient(to left, #ffcc33, #b1ffa3, #ffcc33);
+  background-image: linear-gradient(to left, #87abff, #cdc9ff, #87abff);
   width: 97.5%;
   height: 407px;
-  padding: 1px;
   gap: 20px;
   display: flex;
   justify-content: center;
   flex-direction: column;
   padding-left: 15px;
-  inset: 4px;
+  inset: 4.5px;
   position: absolute;
   border-radius: 8px;
   border-radius: 10px;

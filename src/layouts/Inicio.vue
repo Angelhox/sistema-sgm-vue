@@ -31,7 +31,7 @@ export default defineComponent({
 </script>
 <style scoped>
 .toolbar {
-  background-image: linear-gradient(
+  /* background-image: linear-gradient(
     to right,
     #ffcc33,
     #ff6633,
@@ -41,6 +41,7 @@ export default defineComponent({
     #330066,
     #009933,
     #336600
-  );
+  ); */
+  background: #00aaed;
 }
 </style>

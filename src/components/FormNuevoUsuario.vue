@@ -1,7 +1,7 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <template>
   <div class="q-pa-lg row justify-center content-center">
-    <span class="q-pa-md text-h3" style="text-align: center">Nuevo usuario</span
+    <span class="q-pa-md text-h3" style="text-align: center">Nuevo Socio</span
     >Recibiendo IdAsociacion{{ idAsociacion }}{{ usuarioEncontrado }}
     <div class="col-12 col-12">
       <q-toolbar class="bg-orange shadow-2 rounded-borders">
@@ -18,9 +18,7 @@
     <div class="q-pa-sm col-12 col-md-8">
       <q-input
         class="input"
-        @input="buscarDatosPersona"
-        @change="buscarDatosPersona"
-        @update:model-value="buscarDatosPersona"
+        @update:model-value="limpiarCamposCedulaRucIncorrectos"
         filled
         type="number"
         v-model="cedula"
@@ -94,7 +92,7 @@
         label="Numero de teléfono"
         :rules="[
           (val) =>
-            (val && val.length > 0 && val.length < 10) ||
+            (val && val.length > 0 && val.length < 11) ||
             'Ingresa un numero de télefono válido',
         ]"
       />
@@ -626,7 +624,7 @@
     <div class="q-pa-sm col-12 col-md-6">
       <q-select
         filled
-        :disable="usuarioEncontrado"
+        :disable="habilitarCampos"
         v-model="giro"
         input-debounce="0"
         label="Tipo de giro"
@@ -645,11 +643,10 @@
         </template>
       </q-select>
     </div>
-
     <div class="q-pa-sm col-12 col-md-6">
       <q-input
         filled
-        :disable="usuarioEncontrado"
+        :disable="habilitarCampos"
         v-model="lugarAutorizado"
         label="Lugar Autorizado"
         :rules="[
@@ -659,10 +656,37 @@
         ]"
       />
     </div>
+    <div class="q-pa-sm col-12 col-md-6">
+      <q-input
+        filled
+        :disable="habilitarCampos"
+        v-model="numeroLocal"
+        label="Numero de local"
+        hint="ejemplo: #142"
+        :rules="[
+          (val) =>
+            (val && val.length > 0) || 'Ingrese numero de local del socio',
+        ]"
+      />
+    </div>
+
+    <div class="q-pa-sm col-12 col-md-6">
+      <q-input
+        filled
+        :disable="habilitarCampos"
+        v-model="areaLocal"
+        label="Area del local en metros cuadrados"
+        hint="ejemplo:500"
+        :rules="[
+          (val) =>
+            (val && val.length > 0) || 'Ingrese el area del local del socio',
+        ]"
+      />
+    </div>
     <div class="q-pa-sm col-6 col-md-6">
       <q-input
         filled
-        :disable="usuarioEncontrado"
+        :disable="habilitarCampos"
         v-model="direccionLugarAutorizado"
         label="Direccion Lugar Autorizado"
         :rules="[
@@ -675,7 +699,7 @@
 
     <div class="q-pa-sm col-6 col-md-3">
       <q-input
-        :disable="usuarioEncontrado"
+        :disable="habilitarCampos"
         v-model="horarioAbierto"
         filled
         type="time"
@@ -687,7 +711,7 @@
     </div>
     <div class="q-pa-sm col-12 col-md-3">
       <q-input
-        :disable="usuarioEncontrado"
+        :disable="habilitarCampos"
         v-model="horarioCerrado"
         filled
         type="time"
@@ -701,7 +725,7 @@
     <div class="q-pa-sm col-12 col-md-6">
       <q-select
         filled
-        :disable="usuarioEncontrado"
+        :disable="habilitarCampos"
         v-model="diasHorario"
         input-debounce="0"
         label="Dias de atencion"
@@ -721,23 +745,116 @@
       </q-select>
     </div>
   </div>
+
+  <div>
+    <q-dialog v-model="dialogVisible">
+      <div style="background-color: white">
+        <form-nuevo-proveedor
+          @enviar-formulario="agregaProveedor"
+          :idasociacion="idasociacion"
+        ></form-nuevo-proveedor>
+      </div>
+    </q-dialog>
+  </div>
+  <div>
+    <q-card>
+      <q-card-section>
+        <q-table
+          :data="postsProveedores"
+          title="Proveedores"
+          :columns="columns"
+          color="primary"
+          row-key="id"
+          :rows="postsProveedores"
+          @row-click="rowClicked"
+          @row-dblclick="seleccionarNuevoDirectiva(row)"
+          :rows-per-page-options="[5, 10, 20, 50]"
+          :pagination="true"
+          ref="tablaQuasar"
+          export-csv
+          export-excel
+        >
+          <template v-slot:body="props">
+            <q-tr :props="props">
+              <q-td
+                v-for="columna in columns"
+                :key="columna.name"
+                :props="props"
+                @click="editarDato(props.row.index)"
+              >
+                <!-- Contenido de la tarjeta (fila) aquí -->
+                <p class="q-mb-none">{{ props.row[columna.name] }}</p>
+              </q-td>
+              <q-td>
+                <div class="q-pa q-gutter-none">
+                  <q-btn color="none" @click="editarDato(props.row.index)">
+                    <q-icon
+                      left
+                      size="2em"
+                      name="ti-pencil-alt"
+                      color="black"
+                    />
+                    <div></div>
+                  </q-btn>
+                </div>
+              </q-td>
+            </q-tr>
+          </template>
+          <template v-slot:top-right>
+            <q-input
+              borderless
+              dense
+              debounce="300"
+              v-model="filter"
+              placeholder="Search"
+            >
+              <template v-slot:append>
+                <q-icon name="search" />
+              </template>
+            </q-input>
+          </template>
+
+          <div>
+            <q-btn @click="exportarAExcel">Exportar a Excel</q-btn>
+          </div>
+
+          <!-- <template v-slot:top-left>
+              <q-btn
+                color="primary"
+                icon-right="archive"
+                label="Export to csv"
+                no-caps
+                @click="exportarsAExcel"
+              />
+            </template> -->
+        </q-table>
+        <div class="q-pa-md q-gutter-md">
+          <q-btn color="teal" @click="showForm">
+            <q-icon left size="3em" name="person_add" />
+            <div>Agregar proveedor</div>
+          </q-btn>
+        </div>
+      </q-card-section>
+    </q-card>
+  </div>
+
   <div class="q-pa-md q-gutter-md">
     <q-btn color="teal" @click="guardarSiNO">
       <q-icon left size="3em" name="save" />
       <div>Guardar nuevo usuario</div>
     </q-btn>
-    <q-btn color="brown-5" @click="cancelarSiNO">
+    <q-btn color="brown-5" @click="guardarSiNO">
       <q-icon left size="3em" name="cancel" />
       <div>Cancelar</div>
     </q-btn>
   </div>
 </template>
 <script>
-import TablaAsociaciones from 'src/components/Tabla.Asociaciones.vue';
 import moment from 'moment';
 import 'moment/locale/es';
 import { defineComponent, ref } from 'vue';
-import { Notify, useQuasar } from 'quasar';
+import { fetchWithBaseUrl } from 'src/router/api';
+import FormNuevoProveedor from './FormNuevoProveedor.vue';
 
 const stringOptions = ['Fijo', 'No fijo'];
 const stringOptions1 = ['Si', 'No'];
@@ -768,6 +885,7 @@ const stringOptionsDiasHorario = [
 ];
 
 export default defineComponent({
+  components: { FormNuevoProveedor },
   //components: { TablaAsociaciones },
   //otra forma de declarar data
   props: {
@@ -775,6 +893,81 @@ export default defineComponent({
   },
   data: function () {
     return {
+      columns: [
+        {
+          name: 'index',
+          required: true,
+          label: 'Id',
+          align: 'left',
+          field: 'index',
+
+          sortable: true,
+        },
+        {
+          name: 'nombre',
+          align: 'center',
+          label: 'Nombre',
+          required: true,
+          field: 'nombre',
+          sortable: true,
+        },
+        {
+          name: 'apellido',
+          label: 'Apellido',
+          required: true,
+          field: 'apellido',
+          sortable: true,
+        },
+        {
+          name: 'cedula',
+          required: true,
+          label: 'Cedula',
+          field: 'cedula',
+        },
+        {
+          name: 'telefono',
+          required: true,
+          label: 'Telefono',
+          field: 'telefono',
+        },
+        { name: 'correo', required: true, label: 'Correo', field: 'correo' },
+
+        {
+          name: 'direccion',
+          required: true,
+          label: 'Direccion',
+          field: 'direccion',
+        },
+
+        // {
+        //   name: 'nombreProducto',
+        //   align: 'center',
+        //   label: 'Nombre',
+        //   required: true,
+        //   field: 'nombreProducto',
+        //   sortable: true,
+        // },
+        // {
+        //   name: 'detalleProducto',
+        //   label: 'Apellido',
+        //   required: true,
+        //   field: 'detalleProducto',
+        //   sortable: true,
+        // },
+        // {
+        //   name: 'origenProducto',
+        //   required: true,
+        //   label: 'Cedula',
+        //   field: 'origenProducto',
+        // },
+        // {
+        //   name: 'origenProducto',
+        //   required: true,
+        //   label: 'Cedula',
+        //   field: 'origenProducto',
+        // },
+      ],
+      postsProveedores: [],
       nombre: '',
       apellido: '',
       cedula: '*',
@@ -796,10 +989,14 @@ export default defineComponent({
       //idAscociacion
       idAsociacion: '',
       nombreAsociacion: '',
-      usuarioEncontrado: true,
+      usuarioEncontrado: null,
       dataUsers: [],
       habilitarCampos: true,
       habilitarCamposDiscapacidad: true,
+      idPersona: '',
+      areaLocal: '',
+      numeroLocal: '',
+      dialogVisible: false,
     };
   },
 
@@ -923,6 +1120,34 @@ export default defineComponent({
     };
   },
   methods: {
+    editarDato(id) {
+      // Encontrar la fila correspondiente al ID y editar sus datos
+      const fila = this.postsProveedores.find((dato) => dato.index === id);
+      console.log('editar', fila);
+      // ...
+    },
+    agregaProveedor(datosFormulario) {
+      console.log('ejecutando carga de datos proveedor', datosFormulario);
+      // Agregar los datos del formulario a la tabla
+      console.log('datoFormulario', datosFormulario.nombre);
+      this.postsProveedores.push({
+        nombre: datosFormulario.nombre,
+        correo: datosFormulario.correo,
+        apellido: datosFormulario.apellido,
+        cedula: datosFormulario.cedula,
+        telefono: datosFormulario.telefono,
+        direccion: datosFormulario.direccion,
+      });
+      this.postsProveedores.forEach((row, index) => {
+        row.index = index;
+      });
+    },
+    showForm() {
+      this.dialogVisible = true;
+    },
+    recargarTablaSocios() {
+      this.$emit('getPosts');
+    },
     obtenerFechaPorDefecto() {
       const fechaActual = new Date();
       const anio = fechaActual.getFullYear();
@@ -1048,6 +1273,10 @@ export default defineComponent({
         camposIncorrectos.push('horario abierto');
       } else if (this.horarioCerrado == null || this.horarioCerrado == '') {
         camposIncorrectos.push('horario cerrado');
+      } else if (this.areaLocal == null || this.areaLocal == '') {
+        camposIncorrectos.push('area del local');
+      } else if (this.numeroLocal == null || this.numeroLocal == '') {
+        camposIncorrectos.push('numero del local');
       }
       if (camposIncorrectos.length > 0) {
         for (let i = 0; i < camposIncorrectos.length; i++) {}
@@ -1056,7 +1285,6 @@ export default defineComponent({
             'Completa los campos ' + camposIncorrectos + ' correctamente',
           icon: 'warning',
         });
-        obtenerFechaDesdeString(this.fechaNacimiento);
         console.log('No Guardando...', camposIncorrectos);
       } else {
         // this.guardarAsociacion();
@@ -1081,7 +1309,6 @@ export default defineComponent({
               handler: () => {
                 // Acciones a realizar cuando se selecciona "No"
                 console.log('Se seleccionó "No"');
-                this.$refs.inputNombre.color;
                 console.log(' Cancelando...', camposIncorrectos);
               },
             },
@@ -1103,67 +1330,149 @@ export default defineComponent({
       }
     },
     async guardarUsuario() {
-      try {
-        const response = await this.$axios.post(
-          'http://localhost:3000/usuarios/guardarNuevoUsuario/' +
-            this.idasociacion,
-          {
-            //Datos basicos del usuario
-            nombre: this.nombre,
-            apellido: this.apellido,
-            cedula: this.cedula,
-            direccion: this.direccion,
-            telefono: this.telefono,
-            correo: this.correo,
-            //Datos de la familia del usuario
-            jefeHogar: this.jefeHogar,
-            numeroHijos: this.numeroHijos,
-            numeroMiembros: this.numeroMiembros,
-            //Datos de la vivienda del usuario
-            propiedadVivienda: this.propiedadVivienda,
-            aguaPotable: this.aguaPotable,
-            luzElectrica: this.luzElectrica,
-            servicioTelefono: this.servicioTelefono,
-            // modeServicioElectricidad: ref(null),
-            servicioInternet: this.servicioInternet,
-            numeroDormitorios: this.numeroDormitorios,
-            //datos del giro del usuario
-            giro: this.giro,
-            horarioAbierto: this.horarioAbierto,
-            horarioCerrado: this.horarioCerrado,
-            lugarAutorizado: this.lugarAutorizado,
-            diasHorario: this.diasHorario,
-            direccionLugarAutorizado: this.direccionLugarAutorizado,
-            //data datos especificos del usuario
-            carnetizado: this.carnetizado,
-            categoria: this.categoria,
-            registrado: this.registrado,
-            estado: this.estado,
-            //datos discapacidad sino del usuario
-            discapacidad: this.discapacidad,
-            idCarnetDiscapacidad: this.idCarnetDiscapacidad,
-            idCarnet: this.idCarnet,
-            tipoDiscapacidad: this.tipoDiscapacidad,
-            gradoDiscapacidad: this.gradoDiscapacidad,
-            //Datos especificos del usuario
-            estadoCivil: this.estadoCivil,
-            fechaNacimiento: this.obtenerFechaDesdeString(this.fechaNacimiento),
-            fechaRegistro: this.obtenerFechaDesdeString(this.fechaRegistro),
-            esDirectiva: 'No',
-          }
-        );
-        this.$q.notify({
-          message: 'Has agregado un nuevo usuario',
-          icon: 'warning',
-        });
-
-        console.log(response.data);
-      } catch (error) {
-        console.log(error.message);
-        this.$q.notify({
-          message: 'Ha ocurrido un error',
-          icon: 'sad',
-        });
+      console.log('guardando1-3');
+      if (this.usuarioEncontrado !== false) {
+        console.log('guardando1-1');
+        try {
+          console.log('guardando1');
+          const response = await this.$axios
+            .post(
+              '/usuarios/crearUsuario/' +
+                this.idPersona +
+                '/' +
+                this.idasociacion,
+              {
+                //Datos de la familia del usuario
+                jefeHogar: this.jefeHogar,
+                numeroHijos: this.numeroHijos,
+                numeroMiembros: this.numeroMiembros,
+                //Datos de la vivienda del usuario
+                propiedadVivienda: this.propiedadVivienda,
+                aguaPotable: this.aguaPotable,
+                luzElectrica: this.luzElectrica,
+                servicioTelefono: this.servicioTelefono,
+                // modeServicioElectricidad: ref(null),
+                servicioInternet: this.servicioInternet,
+                numeroDormitorios: this.numeroDormitorios,
+                //datos del giro del usuario
+                giro: this.giro,
+                horarioAbierto: this.horarioAbierto,
+                horarioCerrado: this.horarioCerrado,
+                lugarAutorizado: this.lugarAutorizado,
+                diasHorario: this.diasHorario,
+                direccionLugarAutorizado: this.direccionLugarAutorizado,
+                areaLocal: this.areaLocal,
+                numeroLocal: this.numeroLocal,
+                //data datos especificos del usuario
+                carnetizado: this.carnetizado,
+                categoria: this.categoria,
+                registrado: this.registrado,
+                estado: this.estado,
+                //datos discapacidad sino del usuario
+                discapacidad: this.discapacidad,
+                idCarnetDiscapacidad: this.idCarnetDiscapacidad,
+                idCarnet: this.idCarnet,
+                tipoDiscapacidad: this.tipoDiscapacidad,
+                gradoDiscapacidad: this.gradoDiscapacidad,
+                //Datos especificos del usuario
+                estadoCivil: this.estadoCivil,
+                fechaNacimiento: this.obtenerFechaDesdeString(
+                  this.fechaNacimiento
+                ),
+                fechaRegistro: this.obtenerFechaDesdeString(this.fechaRegistro),
+                esDirectiva: 'No',
+              },
+              this.recargarTablaSocios()
+            )
+            .catch((error) => console.log('Error al guardar los datos', error));
+          //   }catchError((err) => {
+          //  this.$q.notify({
+          //      message: 'Ha ocurrido un error' + err,
+          // icon: 'warning',
+          //   });
+          //  });
+          console.log(response.data);
+          this.$q.notify({
+            message: 'Has agregado un nuevo usuario',
+            icon: 'warning',
+          });
+          this.recargarTablaSocios();
+        } catch (error) {
+          console.log(error.message);
+          this.$q.notify({
+            message: 'Ha ocurrido un error',
+            icon: 'sad',
+          });
+        }
+      }
+      // if ((this.usuarioEncontrado = false))
+      else {
+        console.log('guardando-22');
+        try {
+          console.log('guardando2');
+          const response = await this.$axios
+            .post('/usuarios/guardarNuevoUsuario/' + this.idasociacion, {
+              //Datos basicos del usuario
+              nombre: this.nombre,
+              apellido: this.apellido,
+              cedula: this.cedula,
+              direccion: this.direccion,
+              telefono: this.telefono,
+              correo: this.correo,
+              //Datos de la familia del usuario
+              jefeHogar: this.jefeHogar,
+              numeroHijos: this.numeroHijos,
+              numeroMiembros: this.numeroMiembros,
+              //Datos de la vivienda del usuario
+              propiedadVivienda: this.propiedadVivienda,
+              aguaPotable: this.aguaPotable,
+              luzElectrica: this.luzElectrica,
+              servicioTelefono: this.servicioTelefono,
+              // modeServicioElectricidad: ref(null),
+              servicioInternet: this.servicioInternet,
+              numeroDormitorios: this.numeroDormitorios,
+              //datos del giro del usuario
+              giro: this.giro,
+              horarioAbierto: this.horarioAbierto,
+              horarioCerrado: this.horarioCerrado,
+              lugarAutorizado: this.lugarAutorizado,
+              diasHorario: this.diasHorario,
+              direccionLugarAutorizado: this.direccionLugarAutorizado,
+              areaLocal: this.areaLocal,
+              numeroLocal: this.numeroLocal,
+              //data datos especificos del usuario
+              carnetizado: this.carnetizado,
+              categoria: this.categoria,
+              registrado: this.registrado,
+              estado: this.estado,
+              //datos discapacidad sino del usuario
+              discapacidad: this.discapacidad,
+              idCarnetDiscapacidad: this.idCarnetDiscapacidad,
+              idCarnet: this.idCarnet,
+              tipoDiscapacidad: this.tipoDiscapacidad,
+              gradoDiscapacidad: this.gradoDiscapacidad,
+              //Datos especificos del usuario
+              estadoCivil: this.estadoCivil,
+              fechaNacimiento: this.obtenerFechaDesdeString(
+                this.fechaNacimiento
+              ),
+              fechaRegistro: this.obtenerFechaDesdeString(this.fechaRegistro),
+              esDirectiva: 'No',
+            })
+            .catch((error) => console.log('Error al guardar los datos', error));
+          this.$q.notify({
+            message: 'Has agregado un nuevo usuario',
+            icon: 'warning',
+          });
+          this.recargarTablaSocios();
+          console.log(response.data);
+        } catch (error) {
+          console.log(error.message);
+          this.$q.notify({
+            message: 'Ha ocurrido un error',
+            icon: 'ups',
+          });
+        }
       }
     },
 
@@ -1174,7 +1483,7 @@ export default defineComponent({
         this.idasociacion,
         this.idAsociacion
       );
-      await fetch('http://localhost:3000/asociaciones/find/' + id)
+      await fetchWithBaseUrl('/asociaciones/find/' + id)
         .then((response) => response.json())
         .then((data) => {
           this.nombreAsociacion = data.nombre;
@@ -1187,12 +1496,13 @@ export default defineComponent({
     },
     buscarDatosPersona() {
       if (
-        (this.cedula.length > 9 && this.cedula.length == 10) ||
-        (this.cedula.length > 10 && this.cedula.length == 13)
+        (this.cedula.length > 9 && this.cedula.length < 11) ||
+        (this.cedula.length > 12 && this.cedula.length < 14)
       ) {
-        fetch(
-          'http://localhost:3000/usuarios/selectUserDataCedula/' +
-            this.cedula +
+        const cedula = this.cedula.split('a').join('');
+        fetchWithBaseUrl(
+          '/usuarios/datosUsuarioPersonaPorCedula/' +
+            cedula +
             '/' +
             this.idasociacion
         )
@@ -1201,15 +1511,13 @@ export default defineComponent({
           .then((dataUsers) => shows(dataUsers))
           .catch((error) => {
             console.log(error);
-            this.$q.notify({
-              message: 'Registra al nuevo usuario',
-              icon: 'warning',
-            });
-            this.habilitarCampos = false;
-            this.usuarioEncontrado = false;
+            this.usuarioEncontradoSiNo();
           });
         const mostrarData = (data) => {
           console.log(data);
+          if (data.nombre != undefined) {
+            return (this.dataUsers = data);
+          }
           return (this.dataUsers = data[0]);
         };
         const shows = (datos) => {
@@ -1260,14 +1568,80 @@ export default defineComponent({
           this.usuarioEncontradoSiNo();
         };
       } else if (this.cedula.length < 10 || this.cedula.length > 13) {
+        this.limpiarCamposCedulaRucIncorrectos;
+        this.$q.notify({
+          message: 'Numero de cedula o ruc incorrecto' + this.cedula,
+          icon: 'warning',
+        });
+      }
+    },
+    limpiarCamposCedulaRucIncorrectos() {
+      if (this.cedula.length + 1 < 10 || this.cedula.length + 1 > 13) {
         this.nombre = '';
         this.apellido = '';
         this.telefono = '';
         this.correo = '';
         this.direccion = '';
-        this.usuarioEncontrado = false;
-        this.habilitarCampos = true;
-        this.idPersona = '';
+        this.jefeHogar = '';
+        this.numeroHijos = '';
+        this.numeroMiembros = '';
+        this.propiedadVivienda = '';
+        this.aguaPotable = '';
+        this.luzElectrica = '';
+        this.servicioTelefono = '';
+        this.servicioInternet = '';
+        this.numeroDormitorios = '';
+        this.giro = '';
+        this.horarioAbierto = '';
+        this.horarioCerrado = '';
+        this.lugarAutorizado = '';
+        this.diasHorario = '';
+        this.direccionLugarAutorizado = '';
+        this.carnetizado = '';
+        this.categoria = '';
+        this.registrado = '';
+        this.estado = '';
+        this.discapacidad = '';
+        this.idCarnetDiscapacidad = '';
+        this.idCarnet = '';
+        this.tipoDiscapacidad = '';
+        this.gradoDiscapacidad = '';
+        this.estadoCivil = '';
+        this.fechaNacimientothis = '';
+        this.fechaRegistro = '';
+      } else if (this.cedula.length == 1) {
+        this.nombre = '';
+        this.apellido = '';
+        this.telefono = '';
+        this.correo = '';
+        this.direccion = '';
+        this.jefeHogar = '';
+        this.numeroHijos = '';
+        this.numeroMiembros = '';
+        this.propiedadVivienda = '';
+        this.aguaPotable = '';
+        this.luzElectrica = '';
+        this.servicioTelefono = '';
+        this.servicioInternet = '';
+        this.numeroDormitorios = '';
+        this.giro = '';
+        this.horarioAbierto = '';
+        this.horarioCerrado = '';
+        this.lugarAutorizado = '';
+        this.diasHorario = '';
+        this.direccionLugarAutorizado = '';
+        this.carnetizado = '';
+        this.categoria = '';
+        this.registrado = '';
+        this.estado = '';
+        this.discapacidad = '';
+        this.idCarnetDiscapacidad = '';
+        this.idCarnet = '';
+        this.tipoDiscapacidad = '';
+        this.gradoDiscapacidad = '';
+        this.estadoCivil = '';
+        this.fechaNacimientothis = '';
+        this.fechaRegistro = '';
       }
     },
     async mostrarDatos(users) {
@@ -1275,23 +1649,33 @@ export default defineComponent({
       this.nombre = users.nombre;
     },
     usuarioEncontradoSiNo() {
-      if (
-        this.nombre === null ||
-        this.nombre === '' ||
-        this.nombre === undefined
-      ) {
-        this.$q.notify({
-          message: 'no error3 ' + this.cedula,
-
-          icon: 'warning',
-        });
+      if (this.nombre.length > 1) {
+        if (this.estado != undefined) {
+          this.$q.notify({
+            message:
+              'Este usuario ya ha sido registrado en esta asociacion ' +
+              this.cedula,
+            icon: 'warning',
+          });
+          this.habilitarCampos = true;
+          this.usuarioEncontrado = null;
+        } else {
+          this.$q.notify({
+            message: 'Datos encontrados' + this.cedula,
+            icon: 'warning',
+          });
+          this.usuarioEncontrado = true;
+          this.habilitarCampos = false;
+        }
       } else {
-        this.usuarioEncontrado = true;
+        this.usuarioEncontrado = false;
         this.$q.notify({
-          message: 'Ya existe un registro para ' + this.cedula,
+          message: 'No existe un registro para ' + this.cedula,
 
           icon: 'warning',
         });
+        this.usuarioEncontrado = false;
+        this.habilitarCampos = false;
       }
       console.log('contenido nombre', this.nombre);
     },
@@ -1302,6 +1686,16 @@ export default defineComponent({
   },
   created() {
     this.idAsociacion = this.idasociacion;
+  },
+  style: `
+    .my-dialog-content {
+      background-color: background: #00aaed;;
+    }
+  `,
+  computed: {
+    dialogContentClass() {
+      return 'my-dialog-content';
+    },
   },
 });
 </script>

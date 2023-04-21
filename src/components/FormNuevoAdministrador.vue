@@ -164,6 +164,10 @@
         <q-icon left size="3em" name="save" />
         <div>Guardar nuevo administrador</div>
       </q-btn>
+      <q-btn color="teal" @click="recargarTablaAdministradores">
+        <q-icon left size="3em" name="save" />
+        <div>Cancelar</div>
+      </q-btn>
     </div>
   </q-page>
 </template>
@@ -197,25 +201,34 @@ export default defineComponent({
     return {};
   },
   methods: {
+    recargarTablaAdministradores() {
+      this.$emit('getPostsAdministradores');
+    },
     async guardarAdministrador() {
       try {
         if (this.usuarioEncontrado === false) {
-          const response = await this.$axios.post(
-            'http://localhost:3000/administradores/adminPersonaData',
-            {
-              //Datos basicos del usuario
-              nombre: this.nombre,
-              apellido: this.apellido,
-              cedula: this.cedula,
-              direccion: this.direccion,
-              telefono: this.telefono,
-              correo: this.correo,
-              username: this.username,
-              password: this.password,
-              token: '',
-              authStrategy: 'password and username',
-            }
-          );
+          this.$q.notify({
+            message:
+              'No puedes asignar como administrador a un usuario no registrado ',
+
+            icon: 'warning',
+          });
+          // const response = await this.$axios.post(
+          // 'http://localhost:3000/administradores/adminPersonaData',
+          // {
+          //   //Datos basicos del usuario
+          //   nombre: this.nombre,
+          //   apellido: this.apellido,
+          //   cedula: this.cedula,
+          //   direccion: this.direccion,
+          //   telefono: this.telefono,
+          //   correo: this.correo,
+          //   username: this.username,
+          //   password: this.password,
+          //   token: '',
+          //   authStrategy: 'password and username',
+          // }
+          // );
           //---Notificar que se guardaron los datos
           console.log(response.data);
         }
@@ -229,6 +242,7 @@ export default defineComponent({
             authStrategy: 'password and username',
           }
         );
+        this.recargarTablaAdministradores();
         //---Notificar que se guardaron los datos
         console.log(response.data);
       } catch (error) {
@@ -259,7 +273,7 @@ export default defineComponent({
         };
         const shows = (datos) => {
           //this.idUsuarioEditar = datos.id;
-          this.idPersona = datos.id;
+          this.idPersona = datos.personaId;
           this.nombre = datos.nombre;
           this.apellido = datos.apellido;
           this.telefono = datos.telefono;

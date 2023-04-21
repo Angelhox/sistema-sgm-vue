@@ -1,4 +1,3 @@
-<!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header elevated style="z-index: 9999">
@@ -12,16 +11,42 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
-      <q-list>
-        <q-item-label header>MENU</q-item-label>
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="toolbar">
+      <q-scroll-area
+        style="
+          height: calc(100% - 150px);
+          margin-top: 150px;
+          border-right: 1px solid #ddd;
+        "
+      >
+        <q-list padding>
+          <q-item @click="$router.push('/Asociaciones')" clickable v-ripple>
+            <q-item-section avatar>
+              <q-icon name="inbox" />
+            </q-item-section>
 
-        <EssentialLink
-          v-for="link in essentialLinks"
-          :key="link.title"
-          v-bind="link"
-        />
-      </q-list>
+            <q-item-section> Asociaciones </q-item-section>
+          </q-item>
+
+          <q-item clickable v-ripple @click="cerrarSesion">
+            <q-item-section avatar>
+              <q-icon name="logout" />
+            </q-item-section>
+
+            <q-item-section> Cerrar Sesion </q-item-section>
+          </q-item>
+        </q-list>
+      </q-scroll-area>
+
+      <q-img class="absolute-top toolbar" style="height: 150px">
+        <div class="absolute-bottom bg-transparent toolbar">
+          <q-avatar size="56px" class="q-mb-sm toolbar">
+            <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
+          </q-avatar>
+          <div class="text-weight-bold">{{ user }}</div>
+          <div>@rstoenescu</div>
+        </div>
+      </q-img>
     </q-drawer>
 
     <q-page-container>
@@ -30,64 +55,39 @@
   </q-layout>
 </template>
 
-<script setup lang="ts">
-import { ref } from 'vue';
+<script lang="ts">
+import { defineComponent, ref } from 'vue';
 import EssentialLink from 'components/EssentialLink.vue';
+const user = localStorage.getItem('role');
 
-const essentialLinks = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev',
-  },
-  {
-    title: 'Usuarios',
-    caption: 'Usuarios',
-    icon: 'Message',
-    link: 'Usuarios',
-  },
-  {
-    title: 'Nuevo Usuario',
-    caption: 'Nuevo Usuario',
-    icon: 'Message',
-    link: 'NuevoUsuario',
-  },
-  {
-    title: 'Administradores',
-    caption: 'Administradores',
-    icon: 'User',
-    link: 'Administradores',
-  },
-  {
-    title: 'Nuevo Administrador',
-    caption: 'Nuevo Administrador',
-    icon: 'e-mail',
-    link: 'NuevoAdministrador',
-  },
-  {
-    title: 'Nueva Asociacion',
-    caption: 'Nueva Asociacion',
-    icon: 'message',
-    link: 'NuevaAsociacion',
-  },
-  {
-    title: 'Asociaciones',
-    caption: 'Asociaciones',
-    icon: 'company',
-    link: 'Asociaciones',
-  },
-];
+export default defineComponent({
+  name: 'MainLayout',
 
-const leftDrawerOpen = ref(false);
+  setup() {
+    const leftDrawerOpen = ref(false);
 
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-}
+    return {
+      user: localStorage.getItem('role'),
+      leftDrawerOpen,
+      toggleLeftDrawer() {
+        leftDrawerOpen.value = !leftDrawerOpen.value;
+      },
+    };
+  },
+  methods: {
+    cerrarSesion() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('role');
+      this.$router.push('/Login');
+    },
+  },
+});
 </script>
+
 <style scoped>
 .toolbar {
-  background-image: linear-gradient(
+  /* background-image: linear-gradient(
     to right,
     #ffcc33,
     #ff6633,
@@ -97,7 +97,8 @@ function toggleLeftDrawer() {
     #330066,
     #009933,
     #336600
-  );
+  ); */
+  background: #00aaed;
   box-shadow: none;
 }
 .btn {

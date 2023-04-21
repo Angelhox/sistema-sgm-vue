@@ -121,3 +121,8 @@ export async function obtenerDatosGuard() {
       });
   }
 }
+export async function cerrarSesion() {
+  localStorage.removeItem('token');
+  localStorage.remoceItem('userId');
+  localStorage.removeItem('role');
+}
